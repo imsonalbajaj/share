@@ -3,6 +3,7 @@ const express = require('express');
 const PORT = process.env.PORT || 3000;
 const ejs = require('ejs');
 const mongoose = require('mongoose');
+var encrypt = require('mongoose-encryption');
 mongoose.connect('mongodb://localhost:27017/userDB');
 
 const app = express();
@@ -16,6 +17,13 @@ const userSchemma = new mongoose.Schema({
     email: String,
     password: String
 });
+
+const secret = "thisIsOurLittleSecret"; // our secret key
+userSchemma.plugin(encrypt, {
+    secret: secret,
+    encryptedFields: ["password"]
+});
+
 const User = new mongoose.model('user', userSchemma);
 
 ////////////////////    ROOT ROUTE     ////////////////////
@@ -37,11 +45,13 @@ app.route('/login')
             if (!err) {
                 if (resp.password === password)
                     res.render('secrets');
-                else{
+                else {
                     console.log("Incorrect password");
                     res.redirect('/');
                 }
-            } else{ console.log(err);}
+            } else {
+                console.log(err);
+            }
         })
     })
 
