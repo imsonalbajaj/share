@@ -12,8 +12,56 @@ app.use(express.urlencoded({
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
+const userSchemma = new mongoose.Schema({
+    email: String,
+    password: String
+});
+const User = new mongoose.model('user', userSchemma);
 
-// 
+////////////////////    ROOT ROUTE     ////////////////////
+app.get('/', function (req, res) {
+    res.render('home');
+})
+
+////////////////////    LOGIN ROUTE     ////////////////////
+app.route('/login')
+    .get(function (req, res) {
+        res.render('login');
+    })
+    .post(function (req, res) {
+        const username = req.body.username;
+        const password = req.body.password;
+        User.findOne({
+            email: username
+        }, function (err, resp) {
+            if (!err) {
+                if (resp.password === password)
+                    res.render('secrets');
+                else{
+                    console.log("Incorrect password");
+                    res.redirect('/');
+                }
+            } else{ console.log(err);}
+        })
+    })
+
+
+////////////////////    REGISTER ROUTE  ////////////////////
+app.route('/register')
+    .get(function (req, res) {
+        res.render('register');
+    })
+    .post(function (req, res) {
+        const user = new User({
+            email: req.body.username,
+            password: req.body.password
+        })
+        user.save(function (err, resp) {
+            if (!err) res.render('secrets');
+            else console.log(err);
+        })
+
+    })
 
 
 app.listen(PORT, () => {
