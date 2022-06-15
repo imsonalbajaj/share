@@ -4,6 +4,7 @@ const express = require('express');
 const PORT = process.env.PORT || 3000;
 const ejs = require('ejs');
 const mongoose = require('mongoose');
+const md5 = require('md5');
 var encrypt = require('mongoose-encryption');
 mongoose.connect('mongodb://localhost:27017/userDB');
 
@@ -38,7 +39,7 @@ app.route('/login')
     })
     .post(function (req, res) {
         const username = req.body.username;
-        const password = req.body.password;
+        const password = md5(req.body.password);
         User.findOne({
             email: username
         }, function (err, resp) {
@@ -64,7 +65,7 @@ app.route('/register')
     .post(function (req, res) {
         const user = new User({
             email: req.body.username,
-            password: req.body.password
+            password: md5(req.body.password)
         })
         user.save(function (err, resp) {
             if (!err) res.render('secrets');
