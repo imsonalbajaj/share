@@ -30,7 +30,8 @@ mongoose.connect('mongodb://localhost:27017/userDB');
 const userSchemma = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: String
 });
 userSchemma.plugin(passportLocalMongoose);
 userSchemma.plugin(findOrCreate);
@@ -134,12 +135,37 @@ app.route('/register')
 
 ////////////////////    SECRETS ROUTE  ////////////////////
 app.get("/secrets", function (req, res) {
+    User.find({"secret": {$ne: null}}, 'secret', function (err, resp) { 
+        if(!err){
+            res.render('secrets', {usersWithSecrets: resp});
+        }
+    })
+});
+
+app.route('/submit')
+.get(function (req,res) { 
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        res.render("submit");
     } else {
         res.redirect("/login");
     }
-});
+})
+.post((req, res)=>{
+    const submittedSecret = req.body.secret;
+
+    User.findById(req.user.id, function(err, foundUser){
+        if (err) {
+          console.log(err);
+        } else {
+          if (foundUser) {
+            foundUser.secret = submittedSecret;
+            foundUser.save(function(){
+              res.redirect("/secrets");
+            });
+          }
+        }
+      });
+})
 
 ////////////////////    LOGOUT ROUTE  ////////////////////
 app.get("/logout", function (req, res) {
